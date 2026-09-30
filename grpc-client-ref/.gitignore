@@ -1,0 +1,7 @@
+# protoc generated files (regenerate from ../../proto/uhmi.proto)
+golang/proto/
+dart/lib/src/generated/
+
+# Dart/Pub artifacts
+.dart_tool/
+pubspec.lock

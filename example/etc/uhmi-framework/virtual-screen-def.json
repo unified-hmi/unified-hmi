@@ -1,0 +1,94 @@
+{
+    "virtual_screen_2d": {
+        "size": {
+            "virtual_w": 3840,
+            "virtual_h": 1080
+        },
+        "virtual_displays": [
+            {
+                "vdisplay_id": 0,
+                "disp_name": "screen0",
+                "virtual_x": 0,
+                "virtual_y": 0,
+                "virtual_w": 1920,
+                "virtual_h": 1080
+            },
+            {
+                "vdisplay_id": 1,
+                "disp_name": "screen1",
+                "virtual_x": 1920,
+                "virtual_y": 0,
+                "virtual_w": 1920,
+                "virtual_h": 1080
+            }
+        ],
+        "virtual_display_areas": [
+            {
+                "area_name": "screen0_TR",
+                "virtual_x": 960,
+                "virtual_y": 0,
+                "virtual_w": 960,
+                "virtual_h": 540
+            },
+            {
+                "area_name": "screen1_BR",
+                "virtual_x": 2880,
+                "virtual_y": 540,
+                "virtual_w": 960,
+                "virtual_h": 540
+            }
+        ]
+    },
+    "real_displays": [
+        {
+            "node_id": 1,
+            "vdisplay_id": 0,
+            "pixel_w": 1920,
+            "pixel_h": 1080,
+            "rdisplay_id": 0
+        },
+        {
+            "node_id": 2,
+            "vdisplay_id": 1,
+            "pixel_w": 1920,
+            "pixel_h": 1080,
+            "rdisplay_id": 0
+        }
+    ],
+    "node": [
+        {
+            "node_id": 1,
+            "hostname": "host0",
+            "ip": "192.168.0.121",
+            "platform": "linux"
+        },
+        {
+            "node_id": 2,
+            "hostname": "host1",
+            "ip": "192.168.0.122",
+            "platform": "linux"
+        }
+    ],
+    "distributed_window_system": {
+        "uhmi_master_node": {
+            "node_id": 1,
+            "port": 6643
+        },
+        "framework_node": [
+            {
+                "node_id": 1,
+                "env": [
+                    "WAYLAND_DISPLAY=wayland-1",
+                    "XDG_RUNTIME_DIR=/run/user/1000"
+                 ]
+            },
+                        {
+                "node_id": 2,
+                "env": [
+                    "WAYLAND_DISPLAY=wayland-1",
+                    "XDG_RUNTIME_DIR=/run/user/1000"
+                 ]
+            }
+        ]
+    }
+}

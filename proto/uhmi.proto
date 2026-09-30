@@ -1,0 +1,333 @@
+// SPDX-License-Identifier: Apache-2.0
+/**
+ * Copyright (c) 2026  Panasonic Automotive Systems, Co., Ltd.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+syntax = "proto3";
+
+package uhmi;
+option go_package = "grpc/uhmi;uhmi";
+
+service UHMIService {
+    // ============================================================
+    // System orchestration (UHMI)
+    //   Whole-system lifecycle, configuration and state.
+    // ============================================================
+    rpc StartAll(Empty) returns (Response);
+    rpc StopAll(Empty) returns (Response);
+    rpc ReloadConfig(Empty) returns (Response);
+
+    // ============================================================
+    // Application lifecycle
+    //   Query, launch and stop individual applications.
+    // ============================================================
+    rpc ListAvailableApps(Empty) returns (Response);
+    rpc ListRunningApps(Empty) returns (Response);
+    rpc GetAppCommand(AppControlRequest) returns (Response);
+    rpc GetAppStatus(AppControlRequest) returns (Response);
+    rpc RunAppCommand(AppCommandRequest) returns (Response);
+    rpc RunApp(AppControlRequest) returns (Response);
+    rpc RunAppAsync(AppControlRequest) returns (Response);
+    rpc StopApp(AppControlRequest) returns (Response);
+
+    // ============================================================
+    // App launch & placement (Layout, unified / JSON-less)
+    //   Launch apps and move/widen their windows across displays.
+    // ============================================================
+    // LaunchApp — unified app launch (app.json or JSON-less) plus layout
+    // (destName geometry, or initial_layout.json when destName is empty).
+    rpc LaunchApp(LaunchAppRequest) returns (LaunchAppResponse);
+    // LaunchApps — launch multiple apps simultaneously (best-effort)
+    rpc LaunchApps(LaunchAppsRequest) returns (LaunchAppsResponse);
+    // MoveWindow — JSON-less window move using virtual_display_areas
+    rpc MoveWindow(MoveWindowRequest) returns (MoveWindowResponse);
+    // MoveWindows — move multiple app windows simultaneously
+    rpc MoveWindows(MoveWindowsRequest) returns (MoveWindowsResponse);
+    // WidenApp — JSON-less app widen across two adjacent virtual displays
+    rpc WidenApp(WidenAppRequest) returns (WidenAppResponse);
+    // ListDestinations — enumerate all valid dest_name values (all 3 tiers)
+    rpc ListDestinations(ListDestinationsRequest) returns (ListDestinationsResponse);
+
+    // ============================================================
+    // App mirroring (Layout)
+    //   Mirror a running app to another destination and remove it.
+    // ============================================================
+    // CreateAppMirror — dynamically mirror a running app to another destination
+    rpc CreateAppMirror(CreateAppMirrorRequest) returns (CreateAppMirrorResponse);
+    // RemoveAppMirror — remove a previously created mirror layer
+    rpc RemoveAppMirror(RemoveAppMirrorRequest) returns (RemoveAppMirrorResponse);
+
+    // ============================================================
+    // System layout & animation (Layout)
+    //   Apply system-wide layouts and run window animations.
+    // ============================================================
+    rpc ApplySystemLayout(Empty) returns (Response);
+    rpc SetApplicationLayout(SetApplicationLayoutRequest) returns (Response);
+    // ReSyncSystemLayout — nudge every worker/compositor to catch up with the
+    // master's cached scene without sending any layout change; a compositor
+    // that was disconnected and reconnected receives its replay snapshot.
+    rpc ReSyncSystemLayout(Empty) returns (Response);
+    rpc SetLayoutCommand(SetLayoutCommandRequest) returns (Response);
+    rpc StartSystemAnimation(StartSystemAnimationRequest) returns (Response);
+    rpc StartSystemAnimationAsync(StartSystemAnimationAsyncRequest) returns (Response);
+    rpc WaitAsyncAnimation(WaitAsyncAnimationRequest) returns (Response);
+    rpc WaitAllAsyncAnimations(Empty) returns (Response);
+    rpc GetAnimationInfo(GetAnimationInfoRequest) returns (GetAnimationInfoResponse);
+
+    // ============================================================
+    // Window activation & priority groups (Layout)
+    // ============================================================
+    // ActivateWindow — bring app layers to the front of their priority group
+    rpc ActivateWindow(ActivateWindowRequest) returns (Response);
+    // DeactivateWindow — send app layers to the back of their priority group and hide them
+    rpc DeactivateWindow(DeactivateWindowRequest) returns (Response);
+    // SetAppPriorityGroup — permanently reassign all layers of an app to the specified priority group
+    rpc SetAppPriorityGroup(SetAppPriorityGroupRequest) returns (Response);
+    // ListPriorityGroups — list all priority groups with their current runtime app assignments
+    rpc ListPriorityGroups(Empty) returns (ListPriorityGroupsResponse);
+
+    // ============================================================
+    // Notifications (Layout)
+    // ============================================================
+    rpc SubscribeNotifications(Empty) returns (stream Notification);
+}
+
+message Empty {}
+
+// Lifecycle messages
+message AppCommandRequest {
+    string app_json = 1;
+}
+
+message AppControlRequest {
+    string app_name = 1;
+}
+
+// Layout messages
+message SetApplicationLayoutRequest {
+    string app_name = 1;
+}
+
+message DeleteApplicationLayoutRequest {
+    string app_name = 1;
+}
+
+message StartSystemAnimationRequest {
+    string app_name = 1;
+    string area_name = 2;
+    string pattern_name = 3;
+}
+
+message StartSystemAnimationAsyncRequest {
+    string app_name = 1;
+    string area_name = 2;
+    string pattern_name = 3;
+    string request_id = 4;
+}
+
+message ActivateWindowRequest {
+    string app_name = 1;
+}
+
+message DeactivateWindowRequest {
+    string app_name = 1;
+}
+
+message SetAppPriorityGroupRequest {
+    string app_name = 1;
+    string group = 2;
+}
+
+message PriorityGroupLayerInfo {
+    string app_name  = 1;
+    string area_name = 2;
+    int32  vid       = 3;
+    int32  z_rank    = 4;  // compositor z-order rank (0=bottommost); -1=not in compositor
+    bool   visible   = 5;
+    double dst_x     = 6;
+    double dst_y     = 7;
+    double dst_w     = 8;
+    double dst_h     = 9;
+}
+
+message PriorityGroupEntry {
+    string name       = 1;
+    int32  priority   = 2;
+    bool   is_default = 3;
+    repeated PriorityGroupLayerInfo layers = 4;
+}
+
+message ListPriorityGroupsResponse {
+    string status = 1;
+    string info   = 2;
+    repeated PriorityGroupEntry groups = 3;
+}
+
+message SetWindowVisibilityRequest {
+    string app_name = 1;
+    string area_name = 2;
+    int32 visibility = 3;
+}
+
+message WaitAsyncAnimationRequest {
+    string request_id = 1;
+}
+
+message SetLayoutCommandRequest {
+    string layout_command = 1;
+}
+
+message GetAnimationInfoRequest {
+    string app_name = 1;
+    string area_name = 2;
+    string pattern_name = 3;
+}
+
+// Shared response
+message Response {
+    string status = 1;
+    string info = 2;
+}
+
+message GetAnimationInfoResponse {
+  string status = 1;
+  string info = 2;
+}
+
+message Notification {
+  string event_type = 1;
+  string request_id = 2;
+  string status = 3;
+  string message = 4;
+}
+
+// LaunchApp messages
+message LaunchAppRequest {
+    string app_name  = 1;
+    string dest_name = 2;  // optional; when empty, initial_layout.json is used
+    bool   async     = 3;  // false(default)=sync (wait for app exit), true=async (return after layout)
+}
+
+message LaunchAppResponse {
+    string status = 1;
+    string info   = 2;
+}
+
+// MoveWindow messages
+message MoveWindowRequest {
+    string app_name    = 1;
+    string dest_name   = 2;
+    double duration_ms = 3;
+    int32  curve_id    = 4;
+}
+
+message MoveWindowResponse {
+    string status = 1;
+    string info   = 2;
+}
+
+// WidenApp messages
+message WidenAppRequest {
+    string app_name    = 1;
+    string disp_name1  = 2;
+    string disp_name2  = 3;
+    double duration_ms = 4;
+    int32  curve_id    = 5;
+}
+
+message WidenAppResponse {
+    string status = 1;
+    string info   = 2;
+}
+
+// ListDestinations messages
+message ListDestinationsRequest {}
+
+message MoveDestination {
+    string name      = 1;  // dest_name to pass to LaunchApp / MoveWindow
+    int32  tier      = 2;  // 1=virtual_display, 2=virtual_display_area, 3=built-in sub-area
+    double virtual_x = 3;
+    double virtual_y = 4;
+    double virtual_w = 5;
+    double virtual_h = 6;
+}
+
+message ListDestinationsResponse {
+    string   status       = 1;
+    string   info         = 2;
+    repeated MoveDestination destinations = 3;
+}
+
+// LaunchApps messages
+message LaunchAppEntry {
+    string app_name  = 1;
+    string dest_name = 2;
+}
+
+message AppResult {
+    string app_name = 1;
+    string status   = 2;
+    string info     = 3;
+}
+
+message LaunchAppsRequest {
+    repeated LaunchAppEntry apps = 1;
+}
+
+message LaunchAppsResponse {
+    string   status  = 1;
+    string   info    = 2;
+    repeated AppResult results = 3;
+}
+
+// MoveWindows messages
+message MoveWindowEntry {
+    string app_name    = 1;
+    string dest_name   = 2;
+    double duration_ms = 3;
+    int32  curve_id    = 4;
+}
+
+message MoveWindowsRequest {
+    repeated MoveWindowEntry windows = 1;
+}
+
+message MoveWindowsResponse {
+    string   status  = 1;
+    string   info    = 2;
+    repeated AppResult results = 3;
+}
+
+// CreateAppMirror messages
+message CreateAppMirrorRequest {
+    string app_name  = 1;
+    string dest_name = 2;
+}
+
+message CreateAppMirrorResponse {
+    string status      = 1;
+    string info        = 2;
+    string mirror_name = 3;
+}
+
+// RemoveAppMirror messages
+message RemoveAppMirrorRequest {
+    string mirror_name = 1;
+}
+
+message RemoveAppMirrorResponse {
+    string status = 1;
+    string info   = 2;
+}

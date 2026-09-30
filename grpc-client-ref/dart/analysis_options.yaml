@@ -1,0 +1,11 @@
+# This file configures the static analysis results for your project.
+#
+# This enables the 'recommended' set of lints from `package:lints`.
+# See https://dart.dev/go/core-lints
+
+include: package:lints/recommended.yaml
+
+analyzer:
+  exclude:
+    # protoc generated files
+    - lib/src/generated/**

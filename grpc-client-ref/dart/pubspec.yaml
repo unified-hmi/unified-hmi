@@ -1,0 +1,14 @@
+name: uhmi_grpc_client
+description: A sample gRPC client for UHMI (uhmi.proto).
+version: 1.0.0
+publish_to: none
+
+environment:
+  sdk: ^3.5.0
+
+dependencies:
+  grpc: ^5.0.0
+  protobuf: ^6.0.0
+
+dev_dependencies:
+  lints: ^6.0.0
